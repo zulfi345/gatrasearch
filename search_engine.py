@@ -3,13 +3,15 @@ import math
 import time
 import json
 import sqlite3
+import os
 import threading
 import concurrent.futures
 import requests
 from urllib.parse import urlparse, unquote, quote
 from bs4 import BeautifulSoup
 
-DB_PATH = "/home/goxs13/mybrowser/index.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "index.db")
 
 STOP_WORDS = {"yang", "dan", "atau", "di", "ke", "dari", "dengan", "untuk", "pada", "dalam", "ini", "itu", "adalah", "sebagai", "oleh", "sebuah", "para", "akan", "sudah", "telah", "bisa", "dapat", "lebih", "juga", "tidak", "apa", "siapa", "bagaimana", "kenapa", "mengapa", "dimana", "di mana", "kapan", "kah", "nya", "sekarang", "terbaru"}
 
