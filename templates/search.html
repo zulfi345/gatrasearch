@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if query %}{{ query }} - {% endif %}GATRA Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --bg-color: #040711;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-red: #e11d48;
+            --accent-blue: #0284c7;
+            --glow-red: rgba(225, 29, 72, 0.4);
+            --glow-blue: rgba(2, 132, 199, 0.4);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 85% 15%, rgba(225, 29, 72, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 15% 85%, rgba(2, 132, 199, 0.18) 0%, transparent 45%);
+            background-attachment: fixed;
+        }
+
+        /* Header Logo Layout */
+        .top-navbar {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        /* Logo Brand dengan Jarak Aman antar Tulisan */
+        .brand-logo {
+            text-decoration: none;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .brand-logo .logo-main {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            display: inline-block;
+        }
+        .brand-logo .logo-main::after {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            margin-left: 3px;
+            box-shadow: 0 0 8px #ef4444;
+        }
+        .brand-logo .logo-sub {
+            font-size: 9px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 6px; /* Memberi jarak vertical agar tidak menumpuk */
+        }
+
+        /* Search Box Red-Blue Glow */
+        .search-box-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 50px;
+            padding: 1.5px;
+            background: linear-gradient(90deg, var(--accent-red) 0%, var(--accent-blue) 100%);
+            box-shadow: 0 0 22px var(--glow-red), 0 0 22px var(--glow-blue);
+            transition: box-shadow 0.3s ease;
+        }
+        .search-box-inner {
+            display: flex;
+            align-items: center;
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 50px;
+            padding: 4px 16px;
+        }
+
+        .search-icon { color: var(--text-muted); margin-right: 10px; display: flex; }
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: inherit;
+            padding: 10px 0;
+        }
+        .search-input::placeholder { color: #64748b; }
+
+        .search-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+        }
+        .action-btn:hover { color: #ffffff; }
+        .btn-clear { display: none; font-size: 18px; font-weight: bold; color: #94a3b8; }
+
+        /* AutoSuggest Box */
+        .suggest-box {
+            position: absolute;
+            top: 115%;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+            z-index: 999;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+        .suggest-item {
+            padding: 10px 18px;
+            font-size: 13.5px;
+            color: #e2e8f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .suggest-item:hover { background: rgba(255, 255, 255, 0.08); color: #38bdf8; }
+
+        /* Homepage Specific */
+        .hero-section {
+            width: 100%;
+            max-width: 850px;
+            margin: 50px auto 20px auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+        .hero-logo { margin-bottom: 16px; }
+        .hero-logo .logo-main { font-size: 56px; letter-spacing: -1px; }
+        .hero-logo .logo-sub { font-size: 14px; letter-spacing: 8px; margin-top: 10px; }
+        .hero-subtitle { color: #e2e8f0; font-size: 15px; margin-bottom: 28px; }
+        .trending-box { margin-top: 28px; font-size: 13px; color: var(--text-muted); }
+        .trending-box span { color: #e2e8f0; font-weight: 600; margin: 0 3px; }
+
+        /* Results Page Specific */
+        .header-search-bar { flex: 1; max-width: 650px; }
+        .results-wrapper {
+            width: 100%;
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 10px 20px 40px 20px;
+        }
+        .stats-info { color: var(--text-muted); font-size: 12.5px; margin-bottom: 16px; }
+
+        /* Tabs Filter Hasil */
+        .category-pills {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            margin-top: 0;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .category-pills::-webkit-scrollbar { display: none; }
+        .pill-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            white-space: nowrap;
+        }
+        .pill-item:hover, .pill-item.active {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: #38bdf8;
+            color: #38bdf8;
+        }
+
+        .results-list { display: flex; flex-direction: column; gap: 12px; }
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 14px 18px;
+        }
+        .card-header { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+        .favicon { width: 14px; height: 14px; border-radius: 2px; }
+        .res-title { font-size: 16px; font-weight: 600; color: #38bdf8; text-decoration: none; display: block; margin-bottom: 4px; }
+        .res-title:hover { text-decoration: underline; }
+        .snippet { font-size: 13px; color: #cbd5e1; line-height: 1.45; }
+        .badge-official { background: #0284c7; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+
+        .image-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .img-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid var(--card-border); text-decoration: none; }
+        .img-card img { width: 100%; height: 105px; object-fit: cover; }
+        .img-card .img-title { font-size: 11px; padding: 6px 8px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        @media (max-width: 768px) {
+            .top-navbar { flex-wrap: wrap; padding: 12px 16px; }
+            .header-search-bar { order: 3; width: 100%; max-width: 100%; margin-top: 10px; }
+            .hero-logo .logo-main { font-size: 42px; }
+            .hero-logo .logo-sub { font-size: 11px; letter-spacing: 6px; margin-top: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    {% if not query %}
+    <!-- TAMPILAN BERANDA -->
+    <header class="top-navbar">
+        <a href="/" class="brand-logo">
+            <span class="logo-main">gatra</span>
+            <span class="logo-sub">SEARCH</span>
+        </a>
+    </header>
+
+    <main class="hero-section">
+        <div class="hero-logo">
+            <a href="/" class="brand-logo" style="align-items: center;">
+                <span class="logo-main">gatra</span>
+                <span class="logo-sub">SEARCH</span>
+            </a>
+        </div>
+        <p class="hero-subtitle">Cari tahu apa saja, lebih cerdas dan akurat.</p>
+
+        <form action="/search" method="get" id="searchForm">
+            <div class="search-box-wrapper">
+                <div class="search-box-inner">
+                    <div class="search-icon">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" id="searchInput" name="q" class="search-input" value="" autocomplete="off" placeholder="Tanya Gatra, cari berita, atau telusuri web di sini...">
+                    <div class="search-actions">
+                        <button type="button" id="btnClear" class="action-btn btn-clear">&times;</button>
+                    </div>
+                </div>
+                <div id="suggestBox" class="suggest-box"></div>
+            </div>
+        </form>
+
+        <div class="trending-box">
+            Sedang tren saat ini: <span>#TeknologiAI</span> <span>#TimnasIndonesia</span> <span>#CuacaHariIni</span>
+        </div>
+    </main>
+
+    {% else %}
+    <!-- TAMPILAN HASIL PENCARIAN -->
+    <header class="top-navbar">
+        <a href="/" class="brand-logo">
+            <span class="logo-main">gatra</span>
+            <span class="logo-sub">SEARCH</span>
+        </a>
+
+        <div class="header-search-bar">
+            <form action="/search" method="get" id="searchForm">
+                <div class="search-box-wrapper">
+                    <div class="search-box-inner">
+                        <input type="text" id="searchInput" name="q" class="search-input" value="{{ query }}" autocomplete="off" placeholder="Cari di Gatra...">
+                        {% if cat %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}
+                        <div class="search-actions">
+                            <button type="button" id="btnClear" class="action-btn btn-clear">&times;</button>
+                            <button type="submit" class="action-btn" style="color: #38bdf8;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="suggestBox" class="suggest-box"></div>
+                </div>
+            </form>
+        </div>
+    </header>
+
+    <main class="results-wrapper">
+        <div class="category-pills">
+            <a href="/search?q={{ query }}&cat=all" class="pill-item {% if cat == 'all' or not cat %}active{% endif %}">Semua</a>
+            <a href="/search?q={{ query }}&cat=images" class="pill-item {% if cat == 'images' %}active{% endif %}">Gambar</a>
+            <a href="/search?q={{ query }}&cat=web" class="pill-item {% if cat == 'web' %}active{% endif %}">Web</a>
+            <a href="/search?q={{ query }}&cat=news" class="pill-item {% if cat == 'news' %}active{% endif %}">Berita</a>
+            <a href="/search?q={{ query }}&cat=edu" class="pill-item {% if cat == 'edu' %}active{% endif %}">Edukasi (.ac.id)</a>
+        </div>
+
+        <div class="stats-info">Ditemukan {{ total }} hasil untuk "<b>{{ query }}</b>"</div>
+
+        {% if cat == 'images' %}
+        <div class="image-grid">
+            {% for img in results %}
+            <a href="{{ img.source_url }}" target="_blank" class="img-card">
+                <img src="{{ img.image_url }}" alt="{{ img.title }}" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                <div class="img-title">{{ img.domain }}</div>
+            </a>
+            {% else %}
+            <p style="color: var(--text-muted);">Tidak ada gambar ditemukan.</p>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <div class="results-list">
+            {% for r in results %}
+            <div class="card">
+                <div class="card-header">
+                    <img src="{{ r.favicon }}" class="favicon" onerror="this.style.display='none'">
+                    <span>{{ r.domain }}</span>
+                    {% if r.is_official %}
+                        <span class="badge-official">Resmi</span>
+                    {% endif %}
+                </div>
+                <a href="{{ r.url }}" class="res-title" target="_blank">{{ r.title }}</a>
+                <div class="snippet">{{ r.snippet | safe }}</div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="snippet">Tidak ada hasil ditemukan.</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+    {% endif %}
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const btnClear = document.getElementById('btnClear');
+        const suggestBox = document.getElementById('suggestBox');
+
+        function toggleClearButton() {
+            if (searchInput && searchInput.value.trim().length > 0) {
+                btnClear.style.display = 'block';
+            } else if (btnClear) {
+                btnClear.style.display = 'none';
+            }
+        }
+
+        if (searchInput) {
+            toggleClearButton();
+
+            searchInput.addEventListener('input', async function() {
+                toggleClearButton();
+                const val = this.value.trim();
+                if (val.length < 2) {
+                    suggestBox.style.display = 'none';
+                    return;
+                }
+                try {
+                    const res = await fetch(`/suggest?q=${encodeURIComponent(val)}`);
+                    const data = await res.json();
+                    if (data.length > 0) {
+                        suggestBox.innerHTML = data.map(item => 
+                            `<div class="suggest-item" onclick="selectSuggest('${item}')">🔍 ${item}</div>`
+                        ).join('');
+                        suggestBox.style.display = 'block';
+                    } else {
+                        suggestBox.style.display = 'none';
+                    }
+                } catch (e) {
+                    suggestBox.style.display = 'none';
+                }
+            });
+
+            btnClear.addEventListener('click', function() {
+                searchInput.value = '';
+                toggleClearButton();
+                suggestBox.style.display = 'none';
+                searchInput.focus();
+            });
+        }
+
+        function selectSuggest(text) {
+            searchInput.value = text;
+            suggestBox.style.display = 'none';
+            document.getElementById('searchForm').submit();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (searchInput && !searchInput.contains(e.target) && suggestBox && !suggestBox.contains(e.target)) {
+                suggestBox.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -1,4 +1,8 @@
 __pycache__/
 *.pyc
-index.db
-Owser.zip
+*.db
+.env
+.venv/
+venv/
+*.zip
+*.deb
